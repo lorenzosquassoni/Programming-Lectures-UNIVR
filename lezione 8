@@ -1,9 +1,9 @@
 #creo una classe edificio:
 
 class Edificio:
-  def __init__(self, metri_quadrati, nome_via, numero_civico, proprietario):
+  def __init__(self, metri_quadrati, indirizzo, numero_civico, proprietario):
     self.metri_quadrati= metri_quadrati
-    self.nome_via= nome_via
+    self.indirizzo= indirizzo
     self.numero_civico= numero_civico
     self.proprietario= proprietario
 
@@ -14,9 +14,9 @@ class Edificio:
 
 
   def __eq__(self, other):         #dico che due indirizzi con lo stesso indirizzo sono lo stesso
-    return self.nome_via== other.nome_via and self.numero_civico== other.numero_civico
+    return self.indirizzo== other.indirizzo and self.numero_civico== other.numero_civico
 
 
   def __repr__(self):  #ricordati che puoi concatenare solo le stringhe! fai casting degli int
-    return self.nome_via + ' ' + str(self.numero_civico) + ' ' + self.proprietario
+    return self.indirizzo + ' ' + str(self.numero_civico) + ' ' + self.proprietario
 
