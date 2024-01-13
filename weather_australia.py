@@ -112,8 +112,12 @@ weather_australia_groupby_city['pressure9am']=weather_australia_groupby_city['pr
 ##replace null values for the column 'pressure3pm'
 weather_australia_groupby_city['pressure3pm']=weather_australia_groupby_city['pressure3pm'].fillna(weather_australia_groupby_city['pressure3pm'].mean()) 
  
- 
-#create select box for chossing between dataset link/variable descriptions
+
+###############################
+###dataset information tools###
+###############################
+
+###create select box for chossing between dataset link/variable descriptions###
 st.subheader('Go to dataset link/ variables descriptions')
 curtain= st.selectbox('Select:', ('Dataset link', 'Variables description'))
 if curtain=='Dataset link':
@@ -144,7 +148,7 @@ if curtain== 'Variables description':
 * RainTomorrow: the amount of next day rain in mm. 
                 """)
     
-#create checkbox for dataset info    
+####create checkbox for dataset info###
 if st.checkbox('Dataset info'):
     st.write("First data points:")
     st.write(weather_australia_df.head(15))
@@ -153,7 +157,7 @@ if st.checkbox('Dataset info'):
     st.write(weather_australia_df.describe().T)
     
     
-#create checkbox for features distribution
+###create checkbox for features distribution###
 show_features_distribution_plot = st.checkbox("Features distribution")
 
 if show_features_distribution_plot:
@@ -164,8 +168,11 @@ if show_features_distribution_plot:
     st.pyplot(fig)
 
 
+###########
+###plots###
+###########
 
-#create a selct box with plots for cities with most and less weather recordings
+###create a selct box with plots for cities with most and less weather recordings###
 weather_recordings_per_city=weather_australia_df['location'].value_counts()
 cities_with_most_weather_recordings=weather_recordings_per_city.head(10)
 cities_with_less_weather_recordings=weather_recordings_per_city.tail(10)
@@ -191,4 +198,231 @@ if weather_recordings_plots=='Cities with most weather recordings':
     st.write(cities_with_most_weather_recordings_plot)
 if weather_recordings_plots=='Cities with less weather recordings':
     st.write(cities_with_less_weather_recordings_plot)
+    
+    
+
+###create a selct box with plots for hottest and coldest cities###
+
+#cities with the highest maximum temperature 
+top_10_hottest_cities=weather_australia_groupby_city.sort_values(by='maxtemp', ascending=False).head(10) #sort the values from highest to lowest according to the average maxtemp and take the first 10 cities
+
+
+cities_with_highest_maxtemp_plot=plt.figure(figsize=(15,8))
+plt.bar(top_10_hottest_cities['maxtemp'].index, top_10_hottest_cities['maxtemp'].values, color=sb.color_palette()[1])
+plt.title('Cities with highest average maximum temperature 2007-2017', fontsize=16)#make the title bigger and more readable
+plt.xlabel('Cities')
+plt.ylabel('Average maximum temperature temperature C°')
+plt.show()
+
+#cities with the lowest min temperature 
+top_10_coldest_cities=weather_australia_groupby_city.sort_values(by='mintemp', ascending=True).head(10) #sort the values from lowest to highest according to the average mintemp and take the first 10 cities
+
+cities_with_lowest_mintemp_plot=plt.figure(figsize=(15,8))
+plt.bar(top_10_coldest_cities['mintemp'].index, top_10_coldest_cities['mintemp'].values, color=sb.color_palette()[2])
+plt.title('Cities with lowest average minimum temperature 2007-2017', fontsize=16)#make the title bigger and more readable
+plt.xlabel('Cities')
+plt.ylabel('Average minimum temperature temperature C°')
+plt.show()
+
+
+st.subheader('Australian hottest and coldest cities')
+hottest_and_coldest_cities_plots=st.selectbox('Select:', ('Hottest cities', 'Coldest cities'))
+if hottest_and_coldest_cities_plots=='Hottest cities':
+    st.write(cities_with_highest_maxtemp_plot)
+if hottest_and_coldest_cities_plots=='Coldest cities':
+    st.write(cities_with_lowest_mintemp_plot)
+
+
+###explore what are the most rainy cities###
+st.subheader('What are the most rainy cities?')
+
+weather_australia_modified=weather_australia_df.copy()
+#I map the values of the 'raintoday'column No-->0 Yes-->1
+weather_australia_modified['raintoday']=weather_australia_modified['raintoday'].replace({'No':0, 'Yes':1}) 
+#I map the values of the 'raintomorrow'column No-->0 Yes-->1
+weather_australia_modified['raintomorrow']=weather_australia_modified['raintomorrow'].replace({'No':0, 'Yes':1})
+#I am interested in considering the 'locaiton' and 'raintoday' columns only 
+weather_australia_groupby_city_sum_raintoday=weather_australia_modified[['location', 'raintoday']].groupby('location').sum() #I group the dataframe by location and sum the values 
+#I concatenete the two Series of weather recordings and rainy days for each city
+pd.concat([weather_recordings_per_city, weather_australia_groupby_city_sum_raintoday ], axis=1)
+rainy_days_per_location_df= pd.concat([weather_recordings_per_city, weather_australia_groupby_city_sum_raintoday ], axis=1) #assign a name to the df
+rainy_days_per_location_df.columns=['weather_recordings', 'rainy_days'] #give new names to columns
+#create a new column showing the ratio between rainy days and weather recordings per city. Those city with the highest ration can be considered the most rainy cities
+rainy_days_per_location_df['pct_of_rainy_days']=round(rainy_days_per_location_df['rainy_days']/rainy_days_per_location_df['weather_recordings'], 2) #round the ration to the second decimal place
+top_10_cities_for_rainy_days=rainy_days_per_location_df['pct_of_rainy_days'].sort_values(ascending=False).head(10) #select the top 10 cities with highest percentage of rainy days
+top_10_cities_for_drought_days=rainy_days_per_location_df['pct_of_rainy_days'].sort_values(ascending=False).tail(10) #select the top 10 cities with lowest percentage of rainy days
+
+fig, ax =plt.subplots(1,2, figsize=(15,5))
+
+ax[0].bar(top_10_cities_for_rainy_days.index, top_10_cities_for_rainy_days.values, width=0.5, color=sb.color_palette()[0])
+ax[0].set_xlabel('Cities')
+ax[0].set_xticklabels(top_10_cities_for_rainy_days.index, rotation=45)
+ax[0].set_ylabel('Percentage of rainy days over total weather recordings')
+ax[0].set_title('Most rainy cities')
+
+ax[1].bar(top_10_cities_for_drought_days.index, top_10_cities_for_drought_days.values, width=0.5, color=sb.color_palette()[5])
+ax[1].set_xlabel('Cities')
+ax[1].set_xticklabels(top_10_cities_for_drought_days.index, rotation=45)
+ax[1].set_ylabel('Percentage of rainy days over total weather recordings')
+ax[1].set_ylim(0, 0.35) #set the y axis bounds in order to have both plots with the same scale
+ax[1].set_title('Most drought cities')
+fig.suptitle('Cities with most and less rainy days 2007-2017: prercentage of rainy days over total weather recordings', fontsize=16)#make the title bigger and more readable
+
+st.pyplot(fig)
+
+st.markdown("""What are the cities with highest average mm of rain?
+I want to explore whether or not those cities that have the highest percentage of rainy days are also the cities with highest average mm of rain.
+If not, this would mean that some cities are subject to occasional but strong rainfalls.
+            """)
+
+cities_sorted_by_mm_of_rain= weather_australia_groupby_city['rainfall'].sort_values( ascending=False)#sort the cities by their average mm of rain
+#select the top 10 cities by average mm of rain
+top_10_cities_for_mm_of_rain= weather_australia_groupby_city['rainfall'].sort_values( ascending=False).head(10)
+
+#create the plot of top 10 cities with highest average mm of rain
+most_rainy_cities_by_mm_of_rain_plot=plt.figure(figsize=(15,8))
+plt.barh(top_10_cities_for_mm_of_rain.index,top_10_cities_for_mm_of_rain.values, color=sb.color_palette()[2])#horizontal bar plot
+plt.title('Cities with highest average mm of rain 2007-2017', fontsize=16)
+plt.xlabel('Average mm of rain')
+plt.ylabel('Cities')
+
+st.write(most_rainy_cities_by_mm_of_rain_plot)
+
+st.markdown('Explore whether the most rainy city, which are the locations with the highest percentage of rainy days, are also the cities with highest averge mm of rain.')
+
+#create plot for cities withhighest average mm of rain and percetage of rainy days
+most_rainy_cities_by_mm_of_rain_and_percentage_of_rainy_days_plot=plt.figure(figsize=(25,18))
+figure=plt.barh(cities_sorted_by_mm_of_rain.index, cities_sorted_by_mm_of_rain.values, color=sb.color_palette()[2])#use horizontal barchart
+plt.title('Cities with highest average mm of rain 2007-2017', fontsize=30)#make the title bigger and more readable
+plt.xlabel('Average mm of rain', fontsize=23)
+plt.ylabel('City')
+plt.yticks(fontsize=20)
+#color in red those cities that belongs to the top 10 rainy cities group
+
+for i, city in enumerate(cities_sorted_by_mm_of_rain.index): #iterate on every city and on its index
+    if city in top_10_cities_for_rainy_days.index: #if the city belongs to the top 10 rainy city group, it is colred in red
+        figure[i].set_color('red')#color the city according to its index poistion in top_10_cities_for_mm_of_rain.index        
+ #create a legend       
+plt.legend([plt.Rectangle((0,0),1,1, fc='red', edgecolor='black')], ['cities with highest percentage of rainy days'], fontsize=18)
+
+st.write(most_rainy_cities_by_mm_of_rain_and_percentage_of_rainy_days_plot)
+
+
+
+######################
+###SIDEBAR SECTIONS###
+######################
+
+###plots fot the Best Australian cities weather section###
+#distribution of maxtemp--> I choose values between 20-30 for the pleasent_maxtemp_mask
+maxtemp_distribution_plot=sb.displot(weather_australia_groupby_city['maxtemp'], kde=True )
+plt.suptitle('Distribution of maxtemp')
+
+#distribution of windspeed3pm--> I choose values between 18 and 22 for the pleasent_windspeed3pm_mask
+windspeed3pm_distribution_plot=sb.displot(weather_australia_groupby_city['windspeed3pm'], kde=True )
+plt.suptitle('Distribution of windspeed3pm')
+
+#distribution of rainfall--> I choose values between 2 and 3 for the pleasent_rainfall_mask
+rainfall_distribution_plot=sb.displot(weather_australia_groupby_city['rainfall'], kde=True )
+plt.suptitle('Distribution of rainfall')
+
+#create the masks:
+pleasent_maxtemp_mask= (weather_australia_groupby_city['maxtemp']>20) & (weather_australia_groupby_city['maxtemp']<30)
+pleasent_windspeed3pm_mask= (weather_australia_groupby_city['windspeed3pm']>18) & (weather_australia_groupby_city['windspeed3pm']<22)
+pleasent_rainfall_mask= (weather_australia_groupby_city['rainfall']>2) & (weather_australia_groupby_city['rainfall']<3)
+
+#scatterplot
+best_australian_cities_for_weather_scatterplot=plt.figure(figsize=(15, 8))
+plt.scatter(weather_australia_groupby_city['maxtemp'].values, weather_australia_groupby_city['rainfall'].values, label='other cities')
+plt.scatter(weather_australia_groupby_city.loc['Albany']['maxtemp'], weather_australia_groupby_city.loc['Albany']['rainfall'], color='red', marker='*', label='Albany') #plot the values of maxtemp and rainfall of Albany using .loc() method since the index are the cities' names; make the dot more visible with marker = *
+plt.scatter(weather_australia_groupby_city.loc['Witchcliffe']['maxtemp'], weather_australia_groupby_city.loc['Witchcliffe']['rainfall'], color='orange', marker='*', label='Withcliffe') #plot the values of maxtemp and rainfall of Withcliffe using .loc() method since the index are the cities' names; make the dot more visible with marker = *
+plt.xlabel('Average maxtemp C°')
+plt.ylabel('Avergae rainfall mm')
+plt.title('Cities with most pleasent weather', fontsize=16)#make the title bigger and more readable
+plt.legend()
+plt.xticks(rotation=45)
+
+
+def cities_with_most_pleasent_weather():
+    st.title("Best Australian cities for weather")
+    st.markdown("""
+             The technique of deciding which Australian city has the nicest weather is arbitrary.
+             Nonetheless, highlighting the cities with neither extremely high nor extremely low temperatures,
+             precipitation, or wind speed might provide some interesting information.
+             """)
+    st.markdown("""
+                In order to evaluate the nicest city in terms of weather I consider 3 variables:
+
+* the maximum temperature
+* wind speed in the afternoon
+* the average mm of rain 
+
+                """)
+    st.markdown(""" 
+                The values of the tempearture, wind speed and rain that I am going to consider as 'more pleasent' are values close to the mean.
+                In order to see what are the values close to the mean, it is usefull to recall the data distribution plots of the variables.
+                """)
+    st.pyplot(maxtemp_distribution_plot)
+    st.pyplot(windspeed3pm_distribution_plot)
+    st.pyplot(rainfall_distribution_plot)
+    
+    st.markdown("""
+                Only 2 cities meet my requests for an optimal climate:
+* Albany
+* Withcliffe
+
+Let's have an overview on the climate of these cities in comparison with other cities:
+                              """)
+    st.write(best_australian_cities_for_weather_scatterplot)
+    
+    
+    
+
+
+
+def climate_change_2007_2017():
+    st.title("Climate change 2007- 2017")
+    st.write("SECTIOS")
+
+
+
+
+
+
+
+
+def extreme_weather_events():
+    st.title("Extreame weather events")
+    st.write("SECTIONSSSS")
+
+# Sidebar
+st.sidebar.title("Sections")
+
+# Pulsanti per le pagine
+best_city_for_weather_page= st.sidebar.button("Best Australian cities for weather")
+climate_change_page= st.sidebar.button("Climate change 2007- 2017")
+extreme_weather_events_page= st.sidebar.button("Extreame weather events")
+
+# Logica per visualizzare la pagina corretta
+if best_city_for_weather_page:
+    cities_with_most_pleasent_weather()
+elif climate_change_page:
+    climate_change_2007_2017()
+elif extreme_weather_events_page:
+    extreme_weather_events()
+    
+
+    
+
+#create a sidebar about extreme weather events
+
+
+
+
+
+#create a sidebar about climate change 2007-2017
+
+
+
+#create a sidebar about cities with most pleasent weather
 
