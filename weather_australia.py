@@ -290,7 +290,7 @@ st.write(most_rainy_cities_by_mm_of_rain_plot)
 
 st.markdown('Explore whether the most rainy city, which are the locations with the highest percentage of rainy days, are also the cities with highest averge mm of rain.')
 
-#create plot for cities withhighest average mm of rain and percetage of rainy days
+#create plot for cities with highest average mm of rain and percetage of rainy days
 most_rainy_cities_by_mm_of_rain_and_percentage_of_rainy_days_plot=plt.figure(figsize=(25,18))
 figure=plt.barh(cities_sorted_by_mm_of_rain.index, cities_sorted_by_mm_of_rain.values, color=sb.color_palette()[2])#use horizontal barchart
 plt.title('Cities with highest average mm of rain 2007-2017', fontsize=30)#make the title bigger and more readable
@@ -313,7 +313,7 @@ st.write(most_rainy_cities_by_mm_of_rain_and_percentage_of_rainy_days_plot)
 ###SIDEBAR SECTIONS###
 ######################
 
-###plots fot the Best Australian cities weather section###
+###plots for the Best Australian cities weather section###
 #distribution of maxtemp--> I choose values between 20-30 for the pleasent_maxtemp_mask
 maxtemp_distribution_plot=sb.displot(weather_australia_groupby_city['maxtemp'], kde=True )
 plt.suptitle('Distribution of maxtemp')
@@ -376,16 +376,151 @@ Let's have an overview on the climate of these cities in comparison with other c
     st.write(best_australian_cities_for_weather_scatterplot)
     
     
+ ###plots for climate change 2007-2017###   
+ 
+ #I create a pandas Series with weather recordings per year
+weather_recordings_per_year_list=[] #create an empty list where the count of weather recordings per year will be appended
+for year in range(2007, 2018): #iterate on every year
+    weather_recordings_per_year_list.append(weather_australia_df[(weather_australia_df['date'].dt.year==year)].date.count())#dt.year to select all data points for a specific year and consider the 'date' attribute
     
+weather_recordings_per_year_series=pd.Series(weather_recordings_per_year_list, index=range(2007, 2018), name='weather recording per year')#creste Pandas Series
+
+#plot of weather recordings per year 2007-2017
+weather_recordings_per_year_2007_2017_plot=plt.figure(figsize=(20, 15))
+plt.bar(weather_recordings_per_year_series.index, weather_recordings_per_year_series.values, color=sb.color_palette()[5])
+plt.xlabel('Year', fontsize=20)
+plt.xticks(range(2007, 2018), fontsize=18 )#show on the x axis all the years between 2007 and 2017
+plt.ylabel('Number of weather recordings', fontsize=18)
+plt.yticks(fontsize=18)
+plt.title('Weather recordings per year 2007-2017', fontsize=20)#make the title bigger and more readable
+
+#I create a pandas Series with annual average maxtemp values
+annual_average_maxtemp_list=[] #create an empty list where the average of annual maxtemp values are appended
+for year in range(2009, 2017): #iterate on every year between 2009 and 2016
+    annual_average_maxtemp_list.append(weather_australia_df[weather_australia_df['date'].dt.year==year].maxtemp.mean())#dt.year to select all data points for a specific year and consider the 'maxtemp' attribute
+    
+annual_average_maxtemp_series=pd.Series(annual_average_maxtemp_list, index=range(2009, 2017), name='annual average maxtemp values')#create Pandas Series
+
+#I create a pandas Series with annual average mintemp values
+annual_average_mintemp_list=[] #create an empty list where the average of annual mintemp values are appended
+for year in range(2009, 2017): #iterate on every year between 2009 and 2016
+    annual_average_mintemp_list.append(weather_australia_df[weather_australia_df['date'].dt.year==year].mintemp.mean())#dt.year to select all data points for a specific year and consider the 'mintemp' attribute
+    
+annual_average_mintemp_series=pd.Series(annual_average_mintemp_list, index=range(2009, 2017), name='annual average mintemp values')#create Pandas Series
+
+#create 2 subplots on maxtemp and mintemp changes from 2009 to 2016
+
+fig_subplots_weather_changes, ax=plt.subplots(1,2, figsize=(30,15))
+#plot for annual average maxtemp 
+ax[0].plot(annual_average_maxtemp_series.index, annual_average_maxtemp_series.values, color=sb.color_palette()[1])
+ax[0].set_xlabel('Years', fontsize=20)
+ax[0].set_xticklabels(range(2008, 2017))#show on the x axis all the years between 2009 and 2016
+ax[0].set_ylabel('Averge maxtemp C°', fontsize=20)
+ax[0].set_title('Annual average maximum temperature', fontsize=25)
+
+#plot for annual average mintemp 
+ax[1].plot(annual_average_mintemp_series.index, annual_average_mintemp_series.values, color=sb.color_palette()[0])
+ax[1].set_xlabel('Years', fontsize=20)
+ax[1].set_xticklabels(range(2008, 2017))#show on the x axis all the years between 2009 and 2016
+ax[1].set_ylabel('Averge mintemp C°', fontsize=20)
+ax[1].set_title('Annual average minimum temperature', fontsize=25)
+
+
+#explore the difference in the in average maximum temperature between 2009 and 2016
+#I create a pandas Series with monthly average maxtemp values for 2009
+months_list=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] #create a list of months for the following pd.Series
+monthly_average_maxtemp_2009_list=[] #create an empty list where the average of monthly maxtemp values are appended
+for month in range(1, 13): 
+    monthly_average_maxtemp_2009_list.append(weather_australia_df[(weather_australia_df['date'].dt.year == 2009) & (weather_australia_df['date'].dt.month == month)]['maxtemp'].mean())#dt.year==2009 to select all values of 2009 and let the month parameter free with dt.month==month. Than compute the mean of the maxtemp attribute with .mean() method
+
+monthly_average_maxtemp_2009_series=pd.Series(monthly_average_maxtemp_2009_list, index=months_list, name='monthly average maxtemp 2009')#create Pandas Series
+
+# I create a pandas Series with monthly average maxtemp values for 2016
+months_list=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] #create a list of months for the following pd.Series
+monthly_average_maxtemp_2016_list=[] #create an empty list where the average of monthly maxtemp values are appended
+for month in range(1, 13): 
+    monthly_average_maxtemp_2016_list.append(weather_australia_df[(weather_australia_df['date'].dt.year == 2016) & (weather_australia_df['date'].dt.month == month)]['maxtemp'].mean())#dt.year==2016 to select all values of 2009 and let the month parameter free with dt.month==month. Than compute the mean of the maxtemp attribute with .mean() method
+    
+monthly_average_maxtemp_2016_series=pd.Series(monthly_average_maxtemp_2016_list, index=months_list, name='monthly average maxtemp 2016')#create Pandas Series
+
+
+#Plot the 2 series of average monthly maxtemp values for year 2009 and year 2016
+difference_average_maximum_temperature_2009_2016_plot=plt.figure(figsize=(30,20))
+plt.title('Monthly average maximum temperature in 2009 and 2016', fontsize=35)#make the title bigger and more readable
+plt.plot(months_list, monthly_average_maxtemp_2009_series, color=sb.color_palette()[0], label=2009)
+plt.plot(months_list, monthly_average_maxtemp_2016_series, color=sb.color_palette()[1], label=2016)
+plt.xlabel('months', fontsize=25)
+plt.xticks(fontsize=20)
+plt.ylabel('average maximum temperature C°', fontsize=25)
+plt.yticks(fontsize=20)
+plt.legend(fontsize=25)
+
+
+
+#explore the difference in the in average minimum temperature between 2009 and 2016
+#I create a pandas Series with monthly average mintemp values for 2009
+monthly_average_mintemp_2009_list=[] #create an empty list where the average of monthly mintemp values are appended
+for month in range(1, 13): 
+    monthly_average_mintemp_2009_list.append(weather_australia_df[(weather_australia_df['date'].dt.year == 2009) & (weather_australia_df['date'].dt.month == month)]['mintemp'].mean())#dt.year==2009 to select all values of 2009 and let the month parameter free with dt.month==month. Than compute the mean of the mintemp attribute with .mean() method
+    
+monthly_average_mintemp_2009_series=pd.Series(monthly_average_mintemp_2009_list, index=months_list, name='monthly average mintemp 2009')#create Pandas Series
+
+#I create a pandas Series with monthly average mintemp values for 2016
+monthly_average_mintemp_2016_list=[] #create an empty list where the average of monthly mintemp values are appended
+for month in range(1, 13): 
+    monthly_average_mintemp_2016_list.append(weather_australia_df[(weather_australia_df['date'].dt.year == 2016) & (weather_australia_df['date'].dt.month == month)]['mintemp'].mean())#dt.year==2016 to select all values of 2016 and let the month parameter free with dt.month==month. Than compute the mean of the mintemp attribute with .mean() method
+    
+monthly_average_mintemp_2016_series=pd.Series(monthly_average_mintemp_2016_list, index=months_list, name='monthly average mintemp 2016')#create Pandas Series
+
+#Plot the 2 series of average monthly mintemp values for year 2009 and year 2016
+difference_average_minimum_temperature_2009_2016_plot=plt.figure(figsize=(30,20))
+plt.title('Monthly average minimum temperature in 2009 and 2016', fontsize=35)#make the title bigger and more readable
+plt.plot(months_list, monthly_average_mintemp_2009_series, color=sb.color_palette()[0], label=2009)
+plt.plot(months_list, monthly_average_mintemp_2016_series, color=sb.color_palette()[1], label=2016)
+plt.xlabel('months', fontsize=25)
+plt.xticks(fontsize=20)
+plt.ylabel('average minimum temperature C°', fontsize=25)
+plt.yticks(fontsize=20)
+plt.legend(fontsize=25)
 
 
 
 def climate_change_2007_2017():
     st.title("Climate change 2007- 2017")
-    st.write("SECTIOS")
+    st.markdown("Before creating plots concerning climate change in Australia between 2007 and 2017, I must have a look on the number of weather recordings per year.")
+    st.write(weather_recordings_per_year_2007_2017_plot)
+    st.markdown("""
+                There are **too few values** for years:
+* 2007
+* 2008
+* 2017
+
+Weather of these years are not considered beacuse their annual average data will be not statistically significant due to poverty of recordings.  
+
+Therefore, for the following analysis only the values between 2009 and 2016 will be conseidered. 
+                
+                """)
+    st.write(fig_subplots_weather_changes)
+    st.markdown('Difference in average maximum temperature from 2009 to 2016')
+    st.write(difference_average_maximum_temperature_2009_2016_plot)
+    st.markdown('Difference in average minimum temperature from 2009 to 2016')
+    st.write(difference_average_minimum_temperature_2009_2016_plot)
+    
 
 
 
+
+###plots for extreme weather events###   
+top_500_thundestorms_by_rainfall=weather_australia_df.sort_values(by='rainfall', ascending=True).tail(500) #sort the 500 highest recordings by rainfall
+top_500_thundestorms_by_rainfall['rainfall'] #select the series 
+top_500_thundestorms_by_rainfall['windgustspeed']
+
+#create the plot with seaborn: with 'hue' argument is possible to assign different colors to the cities
+extreme_weather_events_plot=sb.lmplot(x='rainfall', y='windgustspeed', data=top_500_thundestorms_by_rainfall, fit_reg=False,  hue='location', legend=True, height=10)
+plt.title('Strongest thunderstorms 2007-2017')
+plt.xlabel('rainfall mm')
+plt.ylabel('wind speed km/h')
+plt.show()
 
 
 
@@ -393,17 +528,25 @@ def climate_change_2007_2017():
 
 def extreme_weather_events():
     st.title("Extreame weather events")
-    st.write("SECTIONSSSS")
+    st.markdown("We are now going to explore how extreme weather events such storms as windstorms are distributed among the years between 2009 and 2016.")
+    st.markdown("""
+                Where did the 500 strongest thunderstorms occur ?
+                
+                """)
+    st.write(extreme_weather_events_plot)
+    
+    
+    
 
-# Sidebar
+
+#### Sidebar####
 st.sidebar.title("Sections")
 
-# Pulsanti per le pagine
+#Sidebar buttons
 best_city_for_weather_page= st.sidebar.button("Best Australian cities for weather")
 climate_change_page= st.sidebar.button("Climate change 2007- 2017")
 extreme_weather_events_page= st.sidebar.button("Extreame weather events")
 
-# Logica per visualizzare la pagina corretta
 if best_city_for_weather_page:
     cities_with_most_pleasent_weather()
 elif climate_change_page:
@@ -412,17 +555,5 @@ elif extreme_weather_events_page:
     extreme_weather_events()
     
 
-    
 
-#create a sidebar about extreme weather events
-
-
-
-
-
-#create a sidebar about climate change 2007-2017
-
-
-
-#create a sidebar about cities with most pleasent weather
 
