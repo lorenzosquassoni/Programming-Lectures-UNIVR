@@ -96,13 +96,6 @@ weather_australia_df['raintomorrow'].fillna('No', inplace=True)
 #I drop the useless columns as I did for the ungrouped dataframe
 weather_australia_groupby_city.drop(['evaporation', 'sunshine', 'cloud9am', 'cloud3pm'], axis=1, inplace=True)
 
-#cities with null values for 'windgustspeed'
-weather_australia_groupby_city[weather_australia_groupby_city.isnull()['windgustspeed']].windgustspeed
-#cities with null values for 'pressure9am'
-weather_australia_groupby_city[weather_australia_groupby_city.isnull()['pressure9am']].pressure9am
-#cities with null values for 'pressure3pm'
-weather_australia_groupby_city[weather_australia_groupby_city.isnull()['pressure3pm']].pressure3pm
-
 #replace null values for the column 'windgustspeed
 weather_australia_groupby_city['windgustspeed']=weather_australia_groupby_city['windgustspeed'].fillna(weather_australia_groupby_city['windgustspeed'].mean())
 
@@ -144,8 +137,8 @@ if curtain== 'Variables description':
 * Cloud3pm: fraction of sky obscured by cloud (in "oktas": eighths) at 3pm. See Cload9am for a description of the values
 * Temp9am: temperature (degrees C) at 9am
 * Temp3pm: temperature (degrees C) at 3pm
-* RainToday: boolean: 1 if precipitation (mm) in the 24 hours to 9am exceeds 1mm, otherwise 0
-* RainTomorrow: the amount of next day rain in mm. 
+* RainToday: 'Yes' if precipitation (mm) in the 24 hours to 9am exceeds 1mm, otherwise 'No'
+* RainTomorrow: 'Yes' if precipitation (mm) exceeds 1mm during the following day, otherwise 'No'
                 """)
     
 ####create checkbox for dataset info###
@@ -509,21 +502,15 @@ Therefore, for the following analysis only the values between 2009 and 2016 will
 
 
 
-
 ###plots for extreme weather events###   
 top_500_thundestorms_by_rainfall=weather_australia_df.sort_values(by='rainfall', ascending=True).tail(500) #sort the 500 highest recordings by rainfall
-top_500_thundestorms_by_rainfall['rainfall'] #select the series 
-top_500_thundestorms_by_rainfall['windgustspeed']
 
 #create the plot with seaborn: with 'hue' argument is possible to assign different colors to the cities
 extreme_weather_events_plot=sb.lmplot(x='rainfall', y='windgustspeed', data=top_500_thundestorms_by_rainfall, fit_reg=False,  hue='location', legend=True, height=10)
-plt.title('Strongest thunderstorms 2007-2017')
-plt.xlabel('rainfall mm')
-plt.ylabel('wind speed km/h')
+plt.title('Strongest thunderstorms 2007-2017', fontsize=30)
+plt.xlabel('rainfall mm', fontsize=20)
+plt.ylabel('wind speed km/h', fontsize=20)
 plt.show()
-
-
-
 
 
 def extreme_weather_events():
@@ -533,19 +520,16 @@ def extreme_weather_events():
                 Where did the 500 strongest thunderstorms occur ?
                 
                 """)
-    st.write(extreme_weather_events_plot)
-    
-    
+    st.pyplot(extreme_weather_events_plot)
     
 
-
-#### Sidebar####
+#### Sidebar sections####
 st.sidebar.title("Sections")
 
 #Sidebar buttons
 best_city_for_weather_page= st.sidebar.button("Best Australian cities for weather")
 climate_change_page= st.sidebar.button("Climate change 2007- 2017")
-extreme_weather_events_page= st.sidebar.button("Extreame weather events")
+extreme_weather_events_page= st.sidebar.button("Extreme weather events")
 
 if best_city_for_weather_page:
     cities_with_most_pleasent_weather()
