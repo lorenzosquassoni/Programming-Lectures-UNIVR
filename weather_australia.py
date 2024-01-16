@@ -6,6 +6,10 @@ import seaborn as sb
 import plotly.express as px
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
 
 
 #import stramlit
@@ -300,7 +304,68 @@ plt.legend([plt.Rectangle((0,0),1,1, fc='red', edgecolor='black')], ['cities wit
 
 st.write(most_rainy_cities_by_mm_of_rain_and_percentage_of_rainy_days_plot)
 
+###########
+###MODEL###
+###########
+st.subheader('Models')
+st.markdown("""With the following models provided, I will try to predict on the basis of some weather recording data if the next day it will rain or not.
+            This is an example of classification problem.         
+            """)
+st.markdown("""
+            Before creating the models, we need to know what are the features that are mostly correlated with the one we want to predict.
+            To do so, we look at the correlation matrix.
+            """)
 
+
+#compute correlation matrix for numeric variables. I copy and paste only the columns' name of type float.
+correlation_matrix=weather_australia_modified[['mintemp', 'maxtemp', 'rainfall', 'windgustspeed', 'windspeed9am', 'windspeed3pm', 'humidity9am', 'humidity3pm', 'pressure9am', 'pressure3pm', 'temp9am', 'temp3pm', 'raintoday', 'raintomorrow']].corr()
+#create the plot
+correlation_matrix_plot=plt.figure(figsize=(15,8))
+sb.heatmap(correlation_matrix, annot=True,  cmap='Reds')#annote argument explicits the correlation value
+plt.title('Correlation matrix', fontsize=16)
+
+st.write(correlation_matrix_plot)
+st.markdown("""
+            Looking at the correlation matrix, the features that are mostly correlated with the variable I want to predict(raintomorrow) are:
+* humidity 3pm 
+* raintoday
+* rainfall
+            """)
+
+#I map the the values of the features rain_today and rain_tomorrow have been mapped from yes, no--> to 1,0 
+weather_australia_model_df=weather_australia_df
+weather_australia_model_df['raintoday'].replace({'No': 0, 'Yes': 1},inplace = True)
+weather_australia_model_df['raintomorrow'].replace({'No': 0, 'Yes': 1},inplace = True)
+
+
+#I redefine my dataset for the model, only with the variables of interests
+weather_australia_model_df=weather_australia_model_df[['humidity3pm', 'rainfall', 'raintoday', 'raintomorrow']]
+
+y_weather_australia_model= weather_australia_model_df['raintomorrow'] #the variable I want to predict 
+x_weather_australia_model = weather_australia_model_df[['humidity3pm', 'rainfall', 'raintoday']] #the variables I use to predict raintomorrow
+
+x_train, x_test, y_train, y_test = train_test_split(x_weather_australia_model, y_weather_australia_model, test_size=0.2, random_state=1)
+
+###Gaussian Naive Bayes model###
+model_1 = GaussianNB()
+model_1.fit(x_train, y_train)
+y_pred_model_1 = model_1.predict(x_test)
+#evaluate the precision of the model
+accuracy_score_gaussianNB_model=accuracy_score(y_pred_model_1, y_test)
+
+
+###Random forest model###
+model_2 = RandomForestClassifier()
+model_2.fit(x_train, y_train)
+y_pred_model_2 = model_2.predict(x_test)
+accuracy_score_random_forest_model=accuracy_score(y_pred_model_2, y_test)
+
+#choose the model with the select box
+curtain_model= st.selectbox('Choose the model:', ('Gaussian Naive Bayes Model', 'Random Forest Model'))
+if curtain_model=='Gaussian Naive Bayes Model':
+    st.write('Accuracy:', accuracy_score_gaussianNB_model )
+if curtain_model== 'Random Forest Model':
+    st.write('Accuracy:', accuracy_score_random_forest_model)
 
 ######################
 ###SIDEBAR SECTIONS###
