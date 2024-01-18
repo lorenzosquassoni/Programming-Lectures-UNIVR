@@ -1,11 +1,8 @@
 #import all the libraries
-import numpy as np
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sb
-import plotly.express as px
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
@@ -34,7 +31,7 @@ st.subheader('weather recordings of Australian cities from 2007 to 2017')
 weather_australia_df.columns= list(map(lambda x:x.lower().strip(), weather_australia_df.columns))
 
 #the column is a str type so I cast into datetime
-weather_australia_df['date'].dtype
+
 weather_australia_df['date']= pd.to_datetime(weather_australia_df['date'], format='%Y-%m-%d')
 
 #I group the data points by city in order to see if some cities have no data for specific columns.
